@@ -1,0 +1,21 @@
+@startuml
+actor "Менеджер" as Sales
+participant "Web UI" as UI
+participant "Flask API" as API
+participant "Правила" as Rules
+database "SQLite" as DB
+Sales -> UI : Добавить клиента
+UI -> API : POST /api/leads
+API -> DB : INSERT lead
+API -> Rules : apply_workflow(new lead)
+Rules -> DB : INSERT first_contact task, +15 мин
+API --> UI : 201 + карточка
+Sales -> UI : Завершить первый контакт
+UI -> API : PATCH /api/tasks/{id}
+API -> DB : status=done; lead.status=В работе
+Sales -> UI : Квалифицировать
+UI -> API : PUT /api/leads/{id}
+API -> Rules : apply_workflow(status changed)
+Rules -> DB : INSERT proposal task, +2 дня
+API --> UI : Обновлённая карточка
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+actor "Клиент" as Customer
+actor "Менеджер продаж" as Sales
+actor "Руководитель" as Lead
+rectangle "Пульс CRM" {
+  usecase "Подать заявку" as UC1
+  usecase "Создать карточку" as UC2
+  usecase "Назначить ответственного" as UC3
+  usecase "Связаться с клиентом" as UC4
+  usecase "Квалифицировать лид" as UC5
+  usecase "Подготовить КП" as UC6
+  usecase "Продвинуть сделку" as UC7
+  usecase "Завершить задачу" as UC8
+  usecase "Посмотреть показатели" as UC9
+  usecase "Создать задачу контакта" as A1
+  usecase "Создать задачу КП" as A2
+  usecase "Создать задачу повтора" as A3
+}
+Customer --> UC1
+Sales --> UC2
+Sales --> UC4
+Sales --> UC5
+Sales --> UC6
+Sales --> UC7
+Sales --> UC8
+Lead --> UC3
+Lead --> UC9
+UC2 ..> A1 : <<include>>
+UC5 ..> A2 : <<include>>
+UC7 ..> A3 : <<include>>
+@enduml

@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_as-is" targetNamespace="https://github.com/iwik1329/Pulse-crm/process">
+  <bpmn:process id="Process_as-is" name="AS-IS · ручная обработка заявки" isExecutable="false">
+    <bpmn:startEvent id="Node_start" name="Заявка" />
+    <bpmn:task id="Node_receive" name="Прочитать входящую заявку" />
+    <bpmn:task id="Node_spreadsheet" name="Внести данные в таблицу" />
+    <bpmn:exclusiveGateway id="Node_assigned" name="Назначена?" />
+    <bpmn:task id="Node_contact" name="Связаться с клиентом" />
+    <bpmn:exclusiveGateway id="Node_answer" name="Ответил?" />
+    <bpmn:task id="Node_offer" name="Подготовить и отправить КП" />
+    <bpmn:exclusiveGateway id="Node_decision" name="Согласовано?" />
+    <bpmn:endEvent id="Node_won" name="Успех" />
+    <bpmn:endEvent id="Node_lost_assignment" name="Потеря заявки" />
+    <bpmn:endEvent id="Node_lost_answer" name="Нет контроля повтора" />
+    <bpmn:endEvent id="Node_lost_offer" name="Сделка не закрыта" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Node_start" targetRef="Node_receive" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Node_receive" targetRef="Node_spreadsheet" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Node_spreadsheet" targetRef="Node_assigned" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Node_assigned" targetRef="Node_contact" name="да" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Node_assigned" targetRef="Node_lost_assignment" name="нет" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Node_contact" targetRef="Node_answer" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Node_answer" targetRef="Node_offer" name="да" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Node_answer" targetRef="Node_lost_answer" name="нет" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Node_offer" targetRef="Node_decision" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Node_decision" targetRef="Node_won" name="да" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Node_decision" targetRef="Node_lost_offer" name="нет" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_as-is">
+    <bpmndi:BPMNPlane id="Plane_as-is" bpmnElement="Process_as-is">
+      <bpmndi:BPMNShape id="Shape_start" bpmnElement="Node_start">
+        <dc:Bounds x="25" y="117" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_receive" bpmnElement="Node_receive">
+        <dc:Bounds x="90" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_spreadsheet" bpmnElement="Node_spreadsheet">
+        <dc:Bounds x="270" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_assigned" bpmnElement="Node_assigned">
+        <dc:Bounds x="455" y="110" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_contact" bpmnElement="Node_contact">
+        <dc:Bounds x="545" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_answer" bpmnElement="Node_answer">
+        <dc:Bounds x="730" y="110" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_offer" bpmnElement="Node_offer">
+        <dc:Bounds x="820" y="100" width="155" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_decision" bpmnElement="Node_decision">
+        <dc:Bounds x="1015" y="110" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_won" bpmnElement="Node_won">
+        <dc:Bounds x="1145" y="117" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_lost_assignment" bpmnElement="Node_lost_assignment">
+        <dc:Bounds x="462" y="275" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_lost_answer" bpmnElement="Node_lost_answer">
+        <dc:Bounds x="737" y="275" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_lost_offer" bpmnElement="Node_lost_offer">
+        <dc:Bounds x="1022" y="275" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_1" bpmnElement="Flow_1">
+        <di:waypoint x="61" y="135.0" />
+        <di:waypoint x="90" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_2" bpmnElement="Flow_2">
+        <di:waypoint x="235" y="135.0" />
+        <di:waypoint x="270" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_3" bpmnElement="Flow_3">
+        <di:waypoint x="415" y="135.0" />
+        <di:waypoint x="455" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_4" bpmnElement="Flow_4">
+        <di:waypoint x="505" y="135.0" />
+        <di:waypoint x="545" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_5" bpmnElement="Flow_5">
+        <di:waypoint x="480.0" y="160" />
+        <di:waypoint x="480.0" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_6" bpmnElement="Flow_6">
+        <di:waypoint x="690" y="135.0" />
+        <di:waypoint x="730" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_7" bpmnElement="Flow_7">
+        <di:waypoint x="780" y="135.0" />
+        <di:waypoint x="820" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_8" bpmnElement="Flow_8">
+        <di:waypoint x="755.0" y="160" />
+        <di:waypoint x="755.0" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_9" bpmnElement="Flow_9">
+        <di:waypoint x="975" y="135.0" />
+        <di:waypoint x="1015" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_10" bpmnElement="Flow_10">
+        <di:waypoint x="1065" y="135.0" />
+        <di:waypoint x="1145" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_11" bpmnElement="Flow_11">
+        <di:waypoint x="1040.0" y="160" />
+        <di:waypoint x="1040.0" y="275" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

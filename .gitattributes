@@ -1,0 +1,8 @@
+* text=auto
+*.bpmn text eol=lf
+*.svg text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.yml text eol=lf

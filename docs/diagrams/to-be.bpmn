@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_to-be" targetNamespace="https://github.com/iwik1329/Pulse-crm/process">
+  <bpmn:process id="Process_to-be" name="TO-BE · управляемая CRM-воронка" isExecutable="false">
+    <bpmn:startEvent id="Node_start" name="Новая заявка" />
+    <bpmn:serviceTask id="Node_capture" name="Создать карточку CRM" />
+    <bpmn:serviceTask id="Node_dedupe" name="Проверить дубли" />
+    <bpmn:userTask id="Node_assign" name="Назначить ответственного" />
+    <bpmn:serviceTask id="Node_first_task" name="Создать задачу: 15 мин" />
+    <bpmn:userTask id="Node_contact" name="Первый контакт" />
+    <bpmn:exclusiveGateway id="Node_qualified" name="Подходит?" />
+    <bpmn:userTask id="Node_proposal" name="Подготовить КП" />
+    <bpmn:serviceTask id="Node_follow_task" name="Создать задачу повтора" />
+    <bpmn:userTask id="Node_follow" name="Повторный контакт" />
+    <bpmn:exclusiveGateway id="Node_decision" name="Сделка?" />
+    <bpmn:endEvent id="Node_won" name="Выиграна" />
+    <bpmn:endEvent id="Node_not_fit" name="Причина отказа" />
+    <bpmn:endEvent id="Node_lost" name="Проиграна" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Node_start" targetRef="Node_capture" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Node_capture" targetRef="Node_dedupe" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Node_dedupe" targetRef="Node_assign" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Node_assign" targetRef="Node_first_task" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Node_first_task" targetRef="Node_contact" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Node_contact" targetRef="Node_qualified" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Node_qualified" targetRef="Node_proposal" name="да" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Node_qualified" targetRef="Node_not_fit" name="нет" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Node_proposal" targetRef="Node_follow_task" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Node_follow_task" targetRef="Node_follow" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Node_follow" targetRef="Node_decision" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Node_decision" targetRef="Node_won" name="да" />
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Node_decision" targetRef="Node_lost" name="нет" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_to-be">
+    <bpmndi:BPMNPlane id="Plane_to-be" bpmnElement="Process_to-be">
+      <bpmndi:BPMNShape id="Shape_start" bpmnElement="Node_start">
+        <dc:Bounds x="25" y="117" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_capture" bpmnElement="Node_capture">
+        <dc:Bounds x="90" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_dedupe" bpmnElement="Node_dedupe">
+        <dc:Bounds x="270" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_assign" bpmnElement="Node_assign">
+        <dc:Bounds x="450" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_first_task" bpmnElement="Node_first_task">
+        <dc:Bounds x="630" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_contact" bpmnElement="Node_contact">
+        <dc:Bounds x="810" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_qualified" bpmnElement="Node_qualified">
+        <dc:Bounds x="995" y="110" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_proposal" bpmnElement="Node_proposal">
+        <dc:Bounds x="1085" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_follow_task" bpmnElement="Node_follow_task">
+        <dc:Bounds x="1265" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_follow" bpmnElement="Node_follow">
+        <dc:Bounds x="1445" y="100" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_decision" bpmnElement="Node_decision">
+        <dc:Bounds x="1630" y="110" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_won" bpmnElement="Node_won">
+        <dc:Bounds x="1795" y="117" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_not_fit" bpmnElement="Node_not_fit">
+        <dc:Bounds x="1002" y="275" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_lost" bpmnElement="Node_lost">
+        <dc:Bounds x="1637" y="275" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_1" bpmnElement="Flow_1">
+        <di:waypoint x="61" y="135.0" />
+        <di:waypoint x="90" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_2" bpmnElement="Flow_2">
+        <di:waypoint x="235" y="135.0" />
+        <di:waypoint x="270" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_3" bpmnElement="Flow_3">
+        <di:waypoint x="415" y="135.0" />
+        <di:waypoint x="450" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_4" bpmnElement="Flow_4">
+        <di:waypoint x="595" y="135.0" />
+        <di:waypoint x="630" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_5" bpmnElement="Flow_5">
+        <di:waypoint x="775" y="135.0" />
+        <di:waypoint x="810" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_6" bpmnElement="Flow_6">
+        <di:waypoint x="955" y="135.0" />
+        <di:waypoint x="995" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_7" bpmnElement="Flow_7">
+        <di:waypoint x="1045" y="135.0" />
+        <di:waypoint x="1085" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_8" bpmnElement="Flow_8">
+        <di:waypoint x="1020.0" y="160" />
+        <di:waypoint x="1020.0" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_9" bpmnElement="Flow_9">
+        <di:waypoint x="1230" y="135.0" />
+        <di:waypoint x="1265" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_10" bpmnElement="Flow_10">
+        <di:waypoint x="1410" y="135.0" />
+        <di:waypoint x="1445" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_11" bpmnElement="Flow_11">
+        <di:waypoint x="1590" y="135.0" />
+        <di:waypoint x="1630" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_12" bpmnElement="Flow_12">
+        <di:waypoint x="1680" y="135.0" />
+        <di:waypoint x="1795" y="135.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_13" bpmnElement="Flow_13">
+        <di:waypoint x="1655.0" y="160" />
+        <di:waypoint x="1655.0" y="275" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

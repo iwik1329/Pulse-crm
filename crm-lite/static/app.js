@@ -1,6 +1,6 @@
 const STAGES = ['Поиск', 'Квалификация', 'Предложение', 'Переговоры', 'Успешно', 'Отказ'];
 const COLORS = ['#1677f2', '#7847d7', '#f59e0b', '#12b8a6', '#32b367', '#e95d66', '#7f93b1'];
-const state = { view: 'dashboard', leads: [], overview: null, selectedId: null, search: '', status: '' };
+const state = { view: 'dashboard', leads: [], tasks: [], overview: null, selectedId: null, search: '', status: '' };
 const el = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const money = value => '$' + new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value) || 0);
@@ -21,14 +21,14 @@ function toast(message, error = false) {
 }
 async function refresh() {
   try {
-    [state.leads, state.overview] = await Promise.all([api('/api/leads'), api('/api/overview')]);
+    [state.leads, state.tasks, state.overview] = await Promise.all([api('/api/leads'), api('/api/tasks'), api('/api/overview')]);
     render();
   } catch (err) { toast(err.message, true); }
 }
 function setView(view) {
   state.view = view;
   document.querySelectorAll('.nav-link').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
-  el('breadcrumb').textContent = ({dashboard:'Обзор', leads:'Клиенты', pipeline:'Сделки', reports:'Отчёты'})[view];
+  el('breadcrumb').textContent = ({dashboard:'Обзор', leads:'Клиенты', pipeline:'Сделки', tasks:'Задачи', reports:'Отчёты'})[view];
   render();
 }
 function pageHead(eyebrow, title, description, action = '') {
@@ -85,6 +85,12 @@ function pipelinePage() {
   const active=STAGES.filter(s=>s!=='Отказ');
   return pageHead('ПРОДАЖИ','Воронка сделок','Открывайте карточки, чтобы обновлять этапы и суммы.') + `<div class="pipeline">${active.map((stage,i)=>{const rows=state.leads.filter(r=>r.stage===stage); return `<section class="pipeline-col"><div class="pipeline-head"><div><span class="stage-dot" style="background:${COLORS[i]}"></span><strong>${stage}</strong></div><span>${rows.length}</span></div><div class="pipeline-total">${money(rows.reduce((s,r)=>s+r.amount,0))}</div><div class="pipeline-cards">${rows.map(r=>`<button class="deal-card" data-open="${r.id}"><strong>${esc(r.name)}</strong><span>${esc(r.company||'Без компании')}</span><div><b>${money(r.amount)}</b><small>${r.probability}%</small></div></button>`).join('') || '<div class="col-empty">Нет сделок</div>'}</div></section>`}).join('')}</div>`;
 }
+function tasksPage() {
+  const tasks=state.tasks, overdue=tasks.filter(t=>t.overdue).length;
+  return pageHead('АВТОМАТИЗАЦИЯ','Задачи','Новые заявки и переходы по воронке автоматически создают следующие действия.') +
+    `<div class="task-summary"><div><strong>${tasks.length}</strong><span>открытых задач</span></div><div class="urgent"><strong>${overdue}</strong><span>просрочено</span></div><p>Первый контакт — 15 минут · Предложение и повторный контакт — 2 дня</p></div>`+
+    `<div class="panel">${tasks.length ? `<div class="table-wrap"><table class="tasks-table"><thead><tr><th>Задача</th><th>Клиент</th><th>Ответственный</th><th>Срок</th><th></th></tr></thead><tbody>${tasks.map(t=>`<tr><td><strong>${esc(t.title)}</strong><small>${({first_contact:'Новая заявка',proposal:'Квалификация',follow_up:'Этап сделки'})[t.kind]||''}</small></td><td><button class="link-button" data-open="${t.lead_id}">${esc(t.lead_name)}</button><small>${esc(t.company||'Без компании')}</small></td><td>${esc(t.assignee||'Не назначен')}</td><td><span class="${t.overdue?'task-overdue':''}">${new Date(t.due_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></td><td><button class="button button-muted" data-complete="${t.id}">Готово</button></td></tr>`).join('')}</tbody></table></div>` : empty('Новые задачи появятся автоматически, когда вы добавите клиента или продвинете сделку.')}</div>`;
+}
 function reportsPage() {
   const o=state.overview; if(!o) return '';
   const reps=Object.entries(o.by_rep).sort((a,b)=>b[1].amount-a[1].amount);
@@ -95,7 +101,7 @@ function reportsPage() {
     `<div class="grid two">${section('Клиенты по источникам',sourceDonut(o.by_source))}${section('Доход по месяцам',trend(o.revenue_months))}</div>`;
 }
 function render() {
-  el('content').innerHTML=({dashboard:dashboard,leads:leadsPage,pipeline:pipelinePage,reports:reportsPage})[state.view]();
+  el('content').innerHTML=({dashboard:dashboard,leads:leadsPage,pipeline:pipelinePage,tasks:tasksPage,reports:reportsPage})[state.view]();
   const search=el('searchInput'); if(search){search.addEventListener('input',e=>{const pos=e.target.selectionStart;state.search=e.target.value;render();const input=el('searchInput');input.focus();input.setSelectionRange(pos,pos)});el('statusFilter').addEventListener('change',e=>{state.status=e.target.value;render()})}
 }
 async function openLead(id=null) {
@@ -118,6 +124,7 @@ async function addNote(){const body=el('noteInput').value.trim();if(!body)return
 document.addEventListener('click',async e=>{
   const nav=e.target.closest('[data-view]');if(nav){setView(nav.dataset.view);return}
   if(e.target.closest('#addLeadTop,[data-action="add"]')){openLead();return}
+  const task=e.target.closest('[data-complete]');if(task){try{await api(`/api/tasks/${task.dataset.complete}`,{method:'PATCH',body:JSON.stringify({status:'done'})});toast('Задача завершена');await refresh()}catch(err){toast(err.message,true)}return}
   const row=e.target.closest('[data-open]');if(row){openLead(Number(row.dataset.open));return}
   const note=e.target.closest('[data-note-delete]');if(note){try{await api(`/api/notes/${note.dataset.noteDelete}`,{method:'DELETE'});const r=await api(`/api/leads/${state.selectedId}`);renderNotes(r.notes)}catch(err){toast(err.message,true)}}
 });

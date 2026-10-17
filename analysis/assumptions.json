@@ -1,0 +1,18 @@
+{
+  "currency": "RUB",
+  "monthly_leads": 400,
+  "baseline_lost_share": 0.12,
+  "recurring_monthly": 30000,
+  "implementation": [
+    {"work": "Анализ процесса и требования", "days": 6, "rate_per_day": 16000},
+    {"work": "UX и прототип", "days": 4, "rate_per_day": 14000},
+    {"work": "Разработка и интеграция", "days": 18, "rate_per_day": 20000},
+    {"work": "Тестирование", "days": 5, "rate_per_day": 14000},
+    {"work": "Обучение и запуск", "days": 3, "rate_per_day": 16000}
+  ],
+  "scenarios": {
+    "conservative": {"lost_share_after": 0.09, "win_rate_recovered": 0.12, "contribution_per_win": 25000},
+    "base": {"lost_share_after": 0.06, "win_rate_recovered": 0.18, "contribution_per_win": 30000},
+    "optimistic": {"lost_share_after": 0.04, "win_rate_recovered": 0.20, "contribution_per_win": 35000}
+  }
+}

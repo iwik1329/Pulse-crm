@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1930 370" role="img" aria-labelledby="title">
+<title id="title">TO-BE · управляемая CRM-воронка</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6d819b"/></marker></defs>
+<style>text{font-family:Arial,sans-serif;fill:#233b5b}.label{font-size:16px;font-weight:600}.edge{stroke:#6d819b;stroke-width:2;fill:none;marker-end:url(#arrow)}.flowlabel{font-size:15px;fill:#5f7592;font-weight:700}.task{fill:#fff;stroke:#77a6d8;stroke-width:2}.service{fill:#e8f3ff;stroke:#2875d6;stroke-width:2}.event{fill:#fff;stroke:#2772cf;stroke-width:2.5}.end{fill:#fff;stroke:#2571cc;stroke-width:4}.loss{stroke:#e25b6a}.gateway{fill:#fff4db;stroke:#e3a431;stroke-width:2}</style>
+<rect width="100%" height="100%" fill="#f8fbff"/><text x="25" y="36" style="font-size:22px;font-weight:700">TO-BE · управляемая CRM-воронка</text>
+<text x="25" y="60" style="font-size:12px;fill:#7186a2">BPMN 2.0 · события, задачи, развилки и потоки</text>
+<path class="edge" d="M61 135.0 L90 135.0"/>
+<path class="edge" d="M235 135.0 L270 135.0"/>
+<path class="edge" d="M415 135.0 L450 135.0"/>
+<path class="edge" d="M595 135.0 L630 135.0"/>
+<path class="edge" d="M775 135.0 L810 135.0"/>
+<path class="edge" d="M955 135.0 L995 135.0"/>
+<path class="edge" d="M1045 135.0 L1085 135.0"/>
+<text class="flowlabel" x="1065.0" y="128.0">да</text>
+<path class="edge" d="M1020.0 160 L1020.0 275"/>
+<text class="flowlabel" x="1020.0" y="210.5">нет</text>
+<path class="edge" d="M1230 135.0 L1265 135.0"/>
+<path class="edge" d="M1410 135.0 L1445 135.0"/>
+<path class="edge" d="M1590 135.0 L1630 135.0"/>
+<path class="edge" d="M1680 135.0 L1795 135.0"/>
+<text class="flowlabel" x="1737.5" y="128.0">да</text>
+<path class="edge" d="M1655.0 160 L1655.0 275"/>
+<text class="flowlabel" x="1655.0" y="210.5">нет</text>
+<circle class="event" cx="43.0" cy="135.0" r="16.0"/>
+<text x="43.0" y="176" text-anchor="middle" class="label">Новая заявка</text>
+<rect class="service" x="90" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="162.5" y="130.5" text-anchor="middle">Создать карточку</text>
+<text class="label" x="162.5" y="147.5" text-anchor="middle">CRM</text>
+<rect class="service" x="270" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="342.5" y="139.0" text-anchor="middle">Проверить дубли</text>
+<rect class="task" x="450" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="522.5" y="130.5" text-anchor="middle">Назначить</text>
+<text class="label" x="522.5" y="147.5" text-anchor="middle">ответственного</text>
+<rect class="service" x="630" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="702.5" y="130.5" text-anchor="middle">Создать задачу:</text>
+<text class="label" x="702.5" y="147.5" text-anchor="middle">15 мин</text>
+<rect class="task" x="810" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="882.5" y="139.0" text-anchor="middle">Первый контакт</text>
+<path class="gateway" d="M1020.0 110 L1045 135.0 L1020.0 160 L995 135.0 Z"/>
+<text x="1020.0" y="182" text-anchor="middle" class="label">Подходит?</text>
+<rect class="task" x="1085" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="1157.5" y="139.0" text-anchor="middle">Подготовить КП</text>
+<rect class="service" x="1265" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="1337.5" y="130.5" text-anchor="middle">Создать задачу</text>
+<text class="label" x="1337.5" y="147.5" text-anchor="middle">повтора</text>
+<rect class="task" x="1445" y="100" width="145" height="70" rx="13"/>
+<text class="label" x="1517.5" y="139.0" text-anchor="middle">Повторный контакт</text>
+<path class="gateway" d="M1655.0 110 L1680 135.0 L1655.0 160 L1630 135.0 Z"/>
+<text x="1655.0" y="182" text-anchor="middle" class="label">Сделка?</text>
+<circle class="end" cx="1813.0" cy="135.0" r="16.0"/>
+<text x="1813.0" y="176" text-anchor="middle" class="label">Выиграна</text>
+<circle class="end loss" cx="1020.0" cy="293.0" r="16.0"/>
+<text x="1020.0" y="334" text-anchor="middle" class="label">Причина отказа</text>
+<circle class="end loss" cx="1655.0" cy="293.0" r="16.0"/>
+<text x="1655.0" y="334" text-anchor="middle" class="label">Проиграна</text>
+</svg>

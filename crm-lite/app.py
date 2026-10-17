@@ -7,7 +7,8 @@ import io
 import os
 import sqlite3
 from collections import defaultdict
-from datetime import date, datetime
+from contextlib import contextmanager
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, Response
@@ -27,12 +28,17 @@ app = Flask(__name__)
 app.json.ensure_ascii = False
 
 
+@contextmanager
 def db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 def init_db():
@@ -66,14 +72,65 @@ def init_db():
             body TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+            kind TEXT NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'done', 'cancelled')),
+            due_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            completed_at TEXT
+        );
         CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
         CREATE INDEX IF NOT EXISTS idx_leads_stage ON leads(stage);
         CREATE INDEX IF NOT EXISTS idx_notes_lead ON notes(lead_id);
+        CREATE INDEX IF NOT EXISTS idx_tasks_due ON tasks(status, due_at);
+        CREATE INDEX IF NOT EXISTS idx_tasks_lead ON tasks(lead_id);
         """)
 
 
 def rowdict(row):
     return dict(row) if row else None
+
+
+def utc_now():
+    return datetime.now(timezone.utc).replace(microsecond=0)
+
+
+def iso(value):
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def create_task(conn, lead_id, kind, title, due_at):
+    """Keep at most one open task of each kind for a lead."""
+    existing = conn.execute(
+        "SELECT 1 FROM tasks WHERE lead_id = ? AND kind = ? AND status = 'open'",
+        (lead_id, kind),
+    ).fetchone()
+    if not existing:
+        conn.execute(
+            "INSERT INTO tasks (lead_id, kind, title, due_at, created_at) VALUES (?, ?, ?, ?, ?)",
+            (lead_id, kind, title, iso(due_at), iso(utc_now())),
+        )
+
+
+def apply_workflow(conn, lead_id, previous, current):
+    """Create and resolve tasks when a lead advances through the funnel."""
+    now = utc_now()
+    terminal = current["status"] in ("Выигран", "Проигран") or current["stage"] in ("Успешно", "Отказ")
+    if terminal:
+        conn.execute(
+            "UPDATE tasks SET status = 'cancelled', completed_at = ? WHERE lead_id = ? AND status = 'open'",
+            (iso(now), lead_id),
+        )
+        return
+    if previous is None:
+        create_task(conn, lead_id, "first_contact", "Связаться с клиентом", now + timedelta(minutes=15))
+    if current["status"] == "Квалифицирован" and (previous is None or previous["status"] != "Квалифицирован"):
+        create_task(conn, lead_id, "proposal", "Подготовить предложение", now + timedelta(days=2))
+    if current["stage"] in ("Предложение", "Переговоры") and (previous is None or previous["stage"] != current["stage"]):
+        create_task(conn, lead_id, "follow_up", "Уточнить решение по предложению", now + timedelta(days=2))
 
 
 def clean_payload(raw, partial=False):
@@ -158,6 +215,7 @@ def create_lead():
             [payload[key] for key in keys],
         )
         row = conn.execute("SELECT * FROM leads WHERE id = ?", (cur.lastrowid,)).fetchone()
+        apply_workflow(conn, cur.lastrowid, None, row)
     return jsonify(rowdict(row)), 201
 
 
@@ -182,13 +240,15 @@ def update_lead(lead_id):
         return jsonify(error="Нет полей для изменения"), 400
     assignments = ", ".join(f"{key} = ?" for key in payload)
     with db() as conn:
+        previous = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+        if not previous:
+            return jsonify(error="Клиент не найден"), 404
         cur = conn.execute(
             f"UPDATE leads SET {assignments}, updated_at = datetime('now') WHERE id = ?",
             [*payload.values(), lead_id],
         )
-        if not cur.rowcount:
-            return jsonify(error="Клиент не найден"), 404
         row = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+        apply_workflow(conn, lead_id, previous, row)
     return jsonify(rowdict(row))
 
 
@@ -220,10 +280,53 @@ def delete_note(note_id):
     return ("", 204) if cur.rowcount else (jsonify(error="Заметка не найдена"), 404)
 
 
+@app.get("/api/tasks")
+def list_tasks():
+    status = request.args.get("status", "open")
+    if status not in ("open", "done", "cancelled", "all"):
+        return jsonify(error="Недопустимый статус задачи"), 400
+    sql = "SELECT tasks.*, leads.name AS lead_name, leads.company AS company, leads.assignee AS assignee FROM tasks JOIN leads ON leads.id = tasks.lead_id"
+    args = []
+    if status != "all":
+        sql += " WHERE tasks.status = ?"
+        args.append(status)
+    sql += " ORDER BY CASE tasks.status WHEN 'open' THEN 0 ELSE 1 END, tasks.due_at, tasks.id"
+    with db() as conn:
+        rows = conn.execute(sql, args).fetchall()
+    now = iso(utc_now())
+    result = [rowdict(row) for row in rows]
+    for task in result:
+        task["overdue"] = task["status"] == "open" and task["due_at"] <= now
+    return jsonify(result)
+
+
+@app.patch("/api/tasks/<int:task_id>")
+def complete_task(task_id):
+    raw = request.get_json(silent=True) or {}
+    if raw.get("status") != "done":
+        return jsonify(error="Поддерживается только завершение задачи"), 400
+    with db() as conn:
+        task = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        if not task:
+            return jsonify(error="Задача не найдена"), 404
+        if task["status"] != "open":
+            return jsonify(error="Задача уже закрыта"), 409
+        now = iso(utc_now())
+        conn.execute("UPDATE tasks SET status = 'done', completed_at = ? WHERE id = ?", (now, task_id))
+        if task["kind"] == "first_contact":
+            conn.execute(
+                "UPDATE leads SET status = 'В работе', updated_at = datetime('now') WHERE id = ? AND status = 'Новый'",
+                (task["lead_id"],),
+            )
+        result = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    return jsonify(rowdict(result))
+
+
 @app.get("/api/overview")
 def overview():
     with db() as conn:
         rows = [rowdict(r) for r in conn.execute("SELECT * FROM leads ORDER BY updated_at DESC, id DESC")]
+        task_rows = [rowdict(r) for r in conn.execute("SELECT * FROM tasks WHERE status = 'open'")]
     count = len(rows)
     won = [r for r in rows if r["status"] == "Выигран" or r["stage"] == "Успешно"]
     open_deals = [r for r in rows if r["stage"] not in ("Успешно", "Отказ") and r["status"] not in ("Выигран", "Проигран")]
@@ -243,6 +346,7 @@ def overview():
             revenue_months[row["close_date"][:7]] += row["amount"]
     scores = [r["satisfaction"] for r in rows if r["satisfaction"] is not None]
     today = date.today().isoformat()
+    now = iso(utc_now())
     return jsonify({
         "total": count,
         "qualified": sum(r["status"] == "Квалифицирован" for r in rows),
@@ -253,7 +357,8 @@ def overview():
         "revenue": round(sum(r["amount"] for r in won), 2),
         "satisfaction": round(sum(scores) / len(scores), 1) if scores else None,
         "open_cases": sum(r["case_status"].lower() in ("open", "in progress", "открыт", "в работе") for r in rows),
-        "due": sum(bool(r["follow_up"]) and r["follow_up"] <= today and r["status"] not in ("Выигран", "Проигран") for r in rows),
+        "due": sum(task["due_at"] <= now for task in task_rows) + sum(bool(r["follow_up"]) and r["follow_up"] <= today and r["status"] not in ("Выигран", "Проигран") for r in rows),
+        "open_tasks": len(task_rows),
         "by_source": dict(by_source),
         "by_stage": {stage: by_stage[stage] for stage in STAGES},
         "by_rep": dict(by_rep),

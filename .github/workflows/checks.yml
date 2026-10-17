@@ -1,0 +1,27 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  prototype-and-diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install prototype dependencies
+        run: python -m pip install -r crm-lite/requirements.txt
+      - name: Test CRM workflow
+        working-directory: crm-lite
+        run: python -m unittest discover -s tests -v
+      - name: Check BPMN sources and previews
+        run: |
+          python docs/diagrams/generate_bpmn.py
+          git diff --exit-code -- docs/diagrams/as-is.bpmn docs/diagrams/as-is.svg docs/diagrams/to-be.bpmn docs/diagrams/to-be.svg
+      - name: Calculate economics
+        run: |
+          python analysis/economics.py
+          cd analysis && python -m unittest discover -v
